@@ -1,0 +1,16 @@
+{
+  "name": "mock",
+  "description": "Pipeline validation with the scripted mock provider. Results are SIMULATED and must not be reported as model performance.",
+  "provider": "mock",
+  "systems": ["baseline", "forge"],
+  "defects": [],
+  "repeats": 1,
+  "require_real_provider": false,
+  "budgets": {
+    "max_model_calls": 24,
+    "max_experiments": 8,
+    "max_repair_attempts": 3,
+    "max_experiment_rounds": 3,
+    "time_budget_s": 900
+  }
+}

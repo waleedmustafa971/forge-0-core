@@ -1,0 +1,61 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "forge0-backend"
+version = "0.1.0"
+description = "FORGE-0: autonomous, evidence-driven software debugging (backend)"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+dependencies = [
+  "fastapi>=0.115",
+  "uvicorn[standard]>=0.32",
+  "sqlalchemy>=2.0.36",
+  "psycopg[binary]>=3.2.3",
+  "alembic>=1.14",
+  "pydantic>=2.9",
+  "pydantic-settings>=2.6",
+  "httpx>=0.28",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.3",
+  "ruff>=0.8",
+]
+
+[tool.setuptools.packages.find]
+include = ["agents*", "api*", "core*", "providers*", "sandbox*", "services*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+markers = [
+  "docker: requires a working Docker sandbox (skipped when unavailable)",
+  "postgres: requires a PostgreSQL DATABASE_URL (skipped when unavailable)",
+]
+filterwarnings = ["ignore::DeprecationWarning:httpx.*", "ignore:Using `httpx` with `starlette.testclient`"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py312"
+extend-exclude = ["alembic/versions"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "S", "SIM"]
+ignore = [
+  "S101",  # assert in tests
+  "S603",  # subprocess with list args is intentional; sandbox commands are allowlisted
+  "S607",  # partial executable paths (docker/git) are resolved from PATH by design
+  "B008",  # FastAPI Depends() in defaults
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S", "B"]
+# Prompt prose and scripted fixtures embed long natural-language / TypeScript strings.
+"agents/prompts.py" = ["E501"]
+"providers/mock_scenarios/*" = ["E501"]
+
+[tool.ruff.lint.isort]
+known-third-party = ["alembic"]

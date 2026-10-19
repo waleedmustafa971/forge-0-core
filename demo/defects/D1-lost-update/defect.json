@@ -1,0 +1,27 @@
+{
+  "id": "D1-lost-update",
+  "title": "Concurrent order updates lose line items",
+  "category": "concurrency",
+  "description": "OrderService.addItem performs an unguarded read-modify-write: it loads the order, awaits the pricing service, then overwrites the whole order document. Two concurrent addItem calls on the same order both read version N, and the second write silently discards the item added by the first.",
+  "relevant_files": [
+    "src/services/orderService.ts",
+    "src/repositories/orderRepository.ts",
+    "src/db/database.ts"
+  ],
+  "reproduction": [
+    "Place an order with one item.",
+    "Call addItem twice for the same order inside Promise.all.",
+    "Read the order back: only one of the two new items is present."
+  ],
+  "failing_test": {
+    "file": "test/orders.test.ts",
+    "name": "keeps every item when items are added concurrently"
+  },
+  "expected_behavior": "Every concurrently added item is persisted and the total reflects all of them.",
+  "regression_tests": [
+    "adds a single item and recomputes the total",
+    "applies sequential additions in order",
+    "rejects items with invalid quantities"
+  ],
+  "hidden_tests": "benchmarks/hidden-tests/D1-lost-update.test.ts"
+}

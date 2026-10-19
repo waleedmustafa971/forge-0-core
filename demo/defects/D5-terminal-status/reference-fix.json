@@ -1,0 +1,11 @@
+{
+  "defect": "D5-terminal-status",
+  "rationale": "An empty transition list means the status is terminal; only explicitly listed transitions are allowed.",
+  "edits": [
+    {
+      "file": "src/domain/status.ts",
+      "search": "  return allowed.length === 0 || allowed.includes(to);",
+      "replace": "  return allowed.includes(to);"
+    }
+  ]
+}

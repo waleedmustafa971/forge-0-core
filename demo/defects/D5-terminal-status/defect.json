@@ -1,0 +1,26 @@
+{
+  "id": "D5-terminal-status",
+  "title": "Terminal order statuses accept any transition",
+  "category": "validation",
+  "description": "canTransition treats a status with an empty allowed-transition list as unrestricted (`allowed.length === 0 || ...`). Terminal statuses such as 'cancelled' and 'refunded' have empty lists, so a cancelled order can be paid or shipped.",
+  "relevant_files": [
+    "src/domain/status.ts",
+    "src/services/orderService.ts"
+  ],
+  "reproduction": [
+    "Place an order and cancel it.",
+    "Transition it to 'paid'.",
+    "The transition succeeds instead of throwing InvalidTransitionError."
+  ],
+  "failing_test": {
+    "file": "test/status.test.ts",
+    "name": "does not allow a cancelled order to be paid or shipped"
+  },
+  "expected_behavior": "Terminal statuses reject every transition except re-applying the same status.",
+  "regression_tests": [
+    "allows the standard happy path",
+    "rejects moving a shipped order back to pending",
+    "treats re-applying the current status as a no-op"
+  ],
+  "hidden_tests": "benchmarks/hidden-tests/D5-terminal-status.test.ts"
+}

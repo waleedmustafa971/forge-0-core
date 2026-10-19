@@ -1,0 +1,28 @@
+{
+  "id": "D2-duplicate-charge",
+  "title": "Retried payment captures charge the customer twice",
+  "category": "retry / idempotency",
+  "description": "PaymentService.capturePayment generates a fresh idempotency key inside the retried operation. When the gateway processes a charge but the response times out, the retry is sent with a different key, so the gateway treats it as a new charge.",
+  "relevant_files": [
+    "src/services/paymentService.ts",
+    "src/lib/retry.ts",
+    "src/gateways/paymentGateway.ts"
+  ],
+  "reproduction": [
+    "Configure the fake gateway to lose the response of the next request (failNextResponses(1)).",
+    "Call capturePayment once.",
+    "Observe two charges recorded by the gateway."
+  ],
+  "failing_test": {
+    "file": "test/payments.test.ts",
+    "name": "charges the customer exactly once when a timed-out request is retried"
+  },
+  "expected_behavior": "A single logical capture produces exactly one charge, regardless of how many times the request is retried.",
+  "regression_tests": [
+    "captures a payment once when the gateway responds normally",
+    "does not retry declined cards",
+    "gives up after exhausting retries on persistent timeouts",
+    "records separate charges for separate capture calls"
+  ],
+  "hidden_tests": "benchmarks/hidden-tests/D2-duplicate-charge.test.ts"
+}

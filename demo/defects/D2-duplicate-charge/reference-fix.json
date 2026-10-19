@@ -1,0 +1,11 @@
+{
+  "defect": "D2-duplicate-charge",
+  "rationale": "Generate the idempotency key once per logical capture, outside the retry loop, so every retry of the same capture reuses it.",
+  "edits": [
+    {
+      "file": "src/services/paymentService.ts",
+      "search": "    const result = await withRetry(\n      async () => {\n        const idempotencyKey = randomUUID();\n        return this.gateway.charge({ orderId, amount, idempotencyKey });\n      },",
+      "replace": "    const idempotencyKey = randomUUID();\n    const result = await withRetry(\n      async () => this.gateway.charge({ orderId, amount, idempotencyKey }),"
+    }
+  ]
+}

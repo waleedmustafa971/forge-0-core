@@ -1,0 +1,22 @@
+# Lightweight overrides for memory-constrained machines (used by scripts/lite.ps1):
+#   docker compose -f docker-compose.yml -f docker-compose.lite.yml up -d db
+# PostgreSQL is tuned for a single developer (few connections, small buffers) and capped at 256 MB.
+services:
+  db:
+    command:
+      - postgres
+      - -c
+      - shared_buffers=32MB
+      - -c
+      - effective_cache_size=96MB
+      - -c
+      - work_mem=2MB
+      - -c
+      - maintenance_work_mem=16MB
+      - -c
+      - wal_buffers=1MB
+      - -c
+      - max_wal_size=256MB
+      - -c
+      - max_connections=20
+    mem_limit: 256m

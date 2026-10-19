@@ -1,0 +1,26 @@
+{
+  "id": "D3-transaction-leak",
+  "title": "Failed checkout leaks stock reservations",
+  "category": "database transactions",
+  "description": "OrderService.placeOrder opens a transaction but reserves inventory through the root database handle instead of the transaction handle. Reservations are written immediately and survive the rollback when a later line item fails.",
+  "relevant_files": [
+    "src/services/orderService.ts",
+    "src/repositories/inventoryRepository.ts",
+    "src/db/database.ts"
+  ],
+  "reproduction": [
+    "Seed SKU-KEYBOARD with 5 units and SKU-MONITOR with 1 unit.",
+    "Place an order for 2 keyboards and 3 monitors.",
+    "The order is rejected, but keyboard stock drops to 3."
+  ],
+  "failing_test": {
+    "file": "test/checkout.test.ts",
+    "name": "leaves inventory untouched when a multi-item order fails"
+  },
+  "expected_behavior": "A rejected order leaves inventory exactly as it was before the attempt.",
+  "regression_tests": [
+    "reserves stock and persists the order on success",
+    "rejects orders that exceed available stock"
+  ],
+  "hidden_tests": "benchmarks/hidden-tests/D3-transaction-leak.test.ts"
+}

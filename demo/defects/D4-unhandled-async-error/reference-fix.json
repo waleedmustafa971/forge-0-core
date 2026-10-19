@@ -1,0 +1,11 @@
+{
+  "defect": "D4-unhandled-async-error",
+  "rationale": "Await every shipment inside the try block so carrier errors are caught, converted to FulfillmentError, and the status update only runs after all shipments succeed.",
+  "edits": [
+    {
+      "file": "src/services/fulfillmentService.ts",
+      "search": "      order.items.forEach(async (item) => {\n        await this.shipping.createShipment(order.id, item);\n      });",
+      "replace": "      for (const item of order.items) {\n        await this.shipping.createShipment(order.id, item);\n      }"
+    }
+  ]
+}

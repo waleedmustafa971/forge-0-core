@@ -1,0 +1,21 @@
+{
+  "defect": "D1-lost-update",
+  "rationale": "Serialize read-modify-write cycles per order id so concurrent updates are applied one after another instead of overwriting each other.",
+  "edits": [
+    {
+      "file": "src/services/orderService.ts",
+      "search": "  private readonly pricing: PricingClient;\n\n  constructor(",
+      "replace": "  private readonly pricing: PricingClient;\n  private readonly orderLocks = new Map<string, Promise<unknown>>();\n\n  constructor("
+    },
+    {
+      "file": "src/services/orderService.ts",
+      "search": "  /** Adds a line item to an existing pending order. */\n  async addItem(orderId: string, item: NewOrderItem): Promise<Order> {\n    validateItems([item]);\n    const order = await this.orders.get(this.db, orderId);",
+      "replace": "  /** Runs `work` after any in-flight update of the same order has settled. */\n  private async withOrderLock<T>(orderId: string, work: () => Promise<T>): Promise<T> {\n    const previous = this.orderLocks.get(orderId) ?? Promise.resolve();\n    const run = previous.catch(() => undefined).then(work);\n    this.orderLocks.set(orderId, run);\n    try {\n      return await run;\n    } finally {\n      if (this.orderLocks.get(orderId) === run) this.orderLocks.delete(orderId);\n    }\n  }\n\n  /** Adds a line item to an existing pending order. */\n  async addItem(orderId: string, item: NewOrderItem): Promise<Order> {\n    validateItems([item]);\n    return this.withOrderLock(orderId, () => this.applyAddItem(orderId, item));\n  }\n\n  private async applyAddItem(orderId: string, item: NewOrderItem): Promise<Order> {\n    const order = await this.orders.get(this.db, orderId);"
+    },
+    {
+      "file": "src/services/orderService.ts",
+      "search": "  async transition(orderId: string, next: OrderStatus): Promise<Order> {\n    const order = await this.orders.get(this.db, orderId);\n    assertTransition(order.status, next);\n    order.status = next;\n    order.version += 1;\n    await this.orders.update(this.db, order);\n    return order;\n  }",
+      "replace": "  async transition(orderId: string, next: OrderStatus): Promise<Order> {\n    return this.withOrderLock(orderId, async () => {\n      const order = await this.orders.get(this.db, orderId);\n      assertTransition(order.status, next);\n      order.status = next;\n      order.version += 1;\n      await this.orders.update(this.db, order);\n      return order;\n    });\n  }"
+    }
+  ]
+}

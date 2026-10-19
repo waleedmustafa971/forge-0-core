@@ -1,0 +1,11 @@
+{
+  "defect": "D3-transaction-leak",
+  "rationale": "Reserve stock through the transaction handle so reservations commit or roll back together with the order insert.",
+  "edits": [
+    {
+      "file": "src/services/orderService.ts",
+      "search": "        await this.inventory.reserve(this.db, item.sku, item.quantity);",
+      "replace": "        await this.inventory.reserve(tx, item.sku, item.quantity);"
+    }
+  ]
+}

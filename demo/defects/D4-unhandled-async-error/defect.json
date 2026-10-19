@@ -1,0 +1,25 @@
+{
+  "id": "D4-unhandled-async-error",
+  "title": "Shipment failures escape error handling",
+  "category": "async error handling",
+  "description": "FulfillmentService.fulfill books shipments with items.forEach(async ...). forEach ignores the returned promises, so the surrounding try/catch never sees carrier errors: the order is marked shipped immediately and each failure surfaces later as an unhandled promise rejection.",
+  "relevant_files": [
+    "src/services/fulfillmentService.ts",
+    "src/gateways/shippingGateway.ts"
+  ],
+  "reproduction": [
+    "Create a paid order with two items.",
+    "Make the shipping gateway fail for one of the SKUs.",
+    "fulfill() resolves, the order is marked shipped, and an unhandled rejection is raised."
+  ],
+  "failing_test": {
+    "file": "test/fulfillment.test.ts",
+    "name": "reports carrier failures and does not mark the order as shipped"
+  },
+  "expected_behavior": "fulfill() rejects with FulfillmentError, no unhandled rejection escapes, and the order stays 'paid'.",
+  "regression_tests": [
+    "ships every item of a paid order",
+    "refuses to fulfill an unpaid order"
+  ],
+  "hidden_tests": "benchmarks/hidden-tests/D4-unhandled-async-error.test.ts"
+}
